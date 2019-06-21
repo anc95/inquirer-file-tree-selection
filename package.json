@@ -1,0 +1,26 @@
+{
+  "name": "inquirer-file-tree-selection",
+  "version": "1.0.0",
+  "description": "inquerer file tree selection prompt",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "inquerer",
+    "filetree"
+  ],
+  "author": "anc95",
+  "license": "ISC",
+  "dependencies": {
+    "@inquirer/core": "0.0.5-alpha.0",
+    "chalk": "^2.4.2",
+    "directory-tree": "^2.2.3",
+    "loadsh": "0.0.4",
+    "lodash": "^4.17.11",
+    "rxjs": "^6.5.2"
+  },
+  "devDependencies": {
+    "inquirer": "^6.4.0"
+  }
+}
