@@ -1,5 +1,8 @@
 ## Inquirer File Tree Selection Prompt
 
+### QuickDemo
+![QuickDemo]('./example/screenshot.gif)
+
 ### Install
 ```
 npm install inquirer-file-tree-selection-prompt
@@ -16,9 +19,10 @@ inquirer.prompt({
 ```
 
 ### Options
-Takes type, name, message[filter, validate, default, pageSize, onlyShowDir] properties.
+Takes type, name, message[filter, validate, default, pageSize, onlyShowDir, root] properties.
 The extra options that this plugin provides are:
 - `onlyShowDir`:  (Boolean) if true, will only show directory. Default: false.
+- `root`: (String) it is the root of file tree. Default: process.cwd().
 
 ### Example
 ```

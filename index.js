@@ -128,7 +128,7 @@ class FileTreeSelectionPrompt extends Base {
     var message = this.getQuestion();
 
     if (this.firstRender) {
-      message += chalk.dim('(Use arrow keys)');
+      message += chalk.dim('(Use arrow keys, Use space to toggle folder)');
     }
 
     if (this.status === 'answered') {
