@@ -1,11 +1,11 @@
 ## Inquirer File Tree Selection Prompt
 
-## Install
+### Install
 ```
 npm install inquirer-file-tree-selection-prompt
 ```
 
-## Usage
+### Usage
 ```
 inquirer.registerPrompt('file-tree-selection', inquirerFileTreeSelection)
 
@@ -15,12 +15,12 @@ inquirer.prompt({
 })
 ```
 
-## Options
+### Options
 Takes type, name, message[filter, validate, default, pageSize, onlyShowDir] properties.
 The extra options that this plugin provides are:
 - `onlyShowDir`:  (Boolean) if true, will only show directory. Default: false.
 
-## Example
+### Example
 ```
 const inquirer = require('inquirer')
 const inquirerFileTreeSelection = require('inquirer-file-tree-selection-prompt')
