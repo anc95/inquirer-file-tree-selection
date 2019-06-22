@@ -1,11 +1,11 @@
 'use strict';
 /**
- * `list` type prompt
+ * `file-tree-slection` type prompt
  */
 
 const _ = require('lodash');
 const chalk = require('chalk');
-// const figures = require('figures');
+const figures = require('figures');
 const cliCursor = require('cli-cursor');
 const path = require('path');
 const dirTree = require('directory-tree');
@@ -15,16 +15,37 @@ const Base = require('inquirer/lib/prompts/base');
 const observe = require('inquirer/lib/utils/events');
 const Paginator = require('inquirer/lib/utils/paginator');
 
+/**
+ * type: string
+ * onlyShowDir: boolean (default: false)
+ */
 class FileTreeSelectionPrompt extends Base {
   constructor(questions, rl, answers) {
     super(questions, rl, answers);
 
     this.fileTree = dirTree(path.resolve(process.cwd(), this.opt.root || '.'))
-    this.fileTreeChildren = this.fileTree.children
+    this.fileTree.children = this.fileTree.children || []
+
+    this.fileTree.children.unshift({
+      path: process.cwd(),
+      type: 'directory',
+      isCurrentDirectory: true,
+      name: '.(current directory)'
+    })
+
     this.shownList = []
 
     this.firstRender = true;
-    this.selected = this.fileTreeChildren[0];
+    this.selected = this.fileTree.children[0];
+
+    this.opt = {
+      ...{
+        default: null,
+        pageSize: 10,
+        onlyShowDir: false
+      },
+      ...this.opt
+    }
 
     // Make sure no default is set (so it won't be printed)
     this.opt.default = null;
@@ -55,6 +76,9 @@ class FileTreeSelectionPrompt extends Base {
       .pipe(takeUntil(events.line))
       .forEach(this.onSpaceKey.bind(this));
 
+    events.line
+      .forEach(this.onSubmit.bind(this));
+
     cliCursor.hide();
     if (this.firstRender) {
       this.render();
@@ -63,18 +87,28 @@ class FileTreeSelectionPrompt extends Base {
     return this;
   }
 
-  renderFileTree(root = this.fileTree, indent = 0) {
-    const children = root.children
+  renderFileTree(root = this.fileTree, indent = 2) {
+    const children = root.children || []
     let output = ''
 
     children.forEach(itemPath => {
+      if (this.opt.onlyShowDir && itemPath.type !== 'directory') {
+        return
+      }
+
       this.shownList.push(itemPath)
+      let prefix = itemPath.children
+        ? itemPath.open
+          ? figures.arrowDown + ' '
+          : figures.arrowRight + ' '
+        : ''
+      const showValue = ' '.repeat(prefix ? indent - 2 : indent) + prefix + itemPath.name + '\n'
 
       if (itemPath === this.selected) {
-        output += chalk.cyan(' '.repeat(indent) + itemPath.name + '\n')
+        output += chalk.cyan(showValue)
       }
       else {
-        output += ' '.repeat(indent) + itemPath.name + '\n'
+        output += showValue
       }
 
       if (itemPath.open) {
@@ -87,7 +121,7 @@ class FileTreeSelectionPrompt extends Base {
 
   /**
    * Render the prompt to screen
-   * @return {ListPrompt} self
+   * @return {FileTreeSelectionPrompt} self
    */
 
   render() {
@@ -98,11 +132,14 @@ class FileTreeSelectionPrompt extends Base {
       message += chalk.dim('(Use arrow keys)');
     }
 
-    this.shownList = []
-
-    const fileTreeStr = this.renderFileTree()
-
-    message += '\n' + this.paginator.paginate(fileTreeStr + '-----------------', this.shownList.indexOf(this.selected), this.opt.pageSize)
+    if (this.status === 'answered') {
+      message += chalk.cyan(this.selected.path)
+    }
+    else {
+      this.shownList = []
+      const fileTreeStr = this.renderFileTree()
+      message += '\n' + this.paginator.paginate(fileTreeStr + '-----------------', this.shownList.indexOf(this.selected), this.opt.pageSize)
+    }
 
     this.firstRender = false;
     this.screen.render(message);
@@ -112,15 +149,14 @@ class FileTreeSelectionPrompt extends Base {
    * When user press `enter` key
    */
 
-  onSubmit(value) {
+  onSubmit() {
     this.status = 'answered';
 
-    // Rerender prompt
-    // this.render();
+    this.render();
 
     this.screen.done();
     cliCursor.show();
-    this.done(value);
+    this.done(this.selected.path);
   }
 
   moveselected(distance = 0) {

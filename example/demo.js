@@ -7,9 +7,9 @@ inquirer
   .prompt([
     {
       type: 'file-tree-selection',
-      name: 'v'
+      name: 'file'
     }
   ])
   .then(answers => {
-    // Use user feedback for... whatever!!
+    console.log(JSON.stringify(answers))
   });
