@@ -1,5 +1,5 @@
 {
-  "name": "inquirer-file-tree-selection",
+  "name": "inquirer-file-tree-selection-prompt",
   "version": "1.0.0",
   "description": "inquerer file tree selection prompt",
   "main": "index.js",
