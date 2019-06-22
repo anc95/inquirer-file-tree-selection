@@ -15,6 +15,7 @@
   "dependencies": {
     "@inquirer/core": "0.0.5-alpha.0",
     "chalk": "^2.4.2",
+    "cli-cursor": "^3.1.0",
     "directory-tree": "^2.2.3",
     "loadsh": "0.0.4",
     "lodash": "^4.17.11",

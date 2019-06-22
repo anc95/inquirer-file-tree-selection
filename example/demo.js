@@ -7,8 +7,7 @@ inquirer
   .prompt([
     {
       type: 'file-tree-selection',
-      name: 'v',
-      message:' cc'
+      name: 'v'
     }
   ])
   .then(answers => {

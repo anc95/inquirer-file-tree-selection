@@ -6,7 +6,7 @@
 const _ = require('lodash');
 const chalk = require('chalk');
 // const figures = require('figures');
-// const cliCursor = require('cli-cursor');
+const cliCursor = require('cli-cursor');
 const path = require('path');
 const dirTree = require('directory-tree');
 // const runAsync = require('run-async');
@@ -15,32 +15,20 @@ const Base = require('inquirer/lib/prompts/base');
 const observe = require('inquirer/lib/utils/events');
 const Paginator = require('inquirer/lib/utils/paginator');
 
-function addReadPathToTree(root) {
-  root.readPath = root.readPath || ''
-
-  console.log('in', Array.isArray(root.children));
-
-  (root.children || []).forEach((subRoot, index) => {
-    subRoot.readPath = (root.readPath + '.children.' + index).replace(/^\./, '')
-  })
-
-  return root
-}
-
 class FileTreeSelectionPrompt extends Base {
   constructor(questions, rl, answers) {
     super(questions, rl, answers);
 
-    this.fileTree = addReadPathToTree(dirTree(path.resolve(process.cwd(), this.opt.root || '.')))
+    this.fileTree = dirTree(path.resolve(process.cwd(), this.opt.root || '.'))
     this.fileTreeChildren = this.fileTree.children
+    this.shownList = []
 
     this.firstRender = true;
     this.selected = this.fileTreeChildren[0];
 
-    console.log(JSON.stringify(this.selected))
-
     // Make sure no default is set (so it won't be printed)
     this.opt.default = null;
+    this.opt.pageSize = 10
 
     this.paginator = new Paginator(this.screen);
   }
@@ -57,50 +45,40 @@ class FileTreeSelectionPrompt extends Base {
     var self = this;
 
     var events = observe(this.rl);
-    events.normalizedUpKey.pipe(takeUntil(events.line)).forEach(this.onUpKey.bind(this));
+    events.normalizedUpKey
+      .pipe(takeUntil(events.line))
+      .forEach(this.onUpKey.bind(this));
     events.normalizedDownKey
       .pipe(takeUntil(events.line))
       .forEach(this.onDownKey.bind(this));
-    // events.numberKey.pipe(takeUntil(events.line)).forEach(this.onNumberKey.bind(this));
-    // events.line
-    //   .pipe(
-    //     take(1),
-    //     map(this.getCurrentValue.bind(this)),
-    //     flatMap(value => runAsync(self.opt.filter)(value).catch(err => err))
-    //   )
-    //   .forEach(this.onSubmit.bind(this));
+    events.spaceKey
+      .pipe(takeUntil(events.line))
+      .forEach(this.onSpaceKey.bind(this));
 
-    // Init the prompt
-    // cliCursor.hide();
-    this.render();
+    cliCursor.hide();
+    if (this.firstRender) {
+      this.render();
+    }
 
     return this;
   }
 
-  /**
-   * find the neighbor
-   * @param {number} distance
-   */
-  findNeighborOfSlected(distance = 1) {
-    if (!this.selected) {
-      this.selected = this.fileTree[0]
-    }
-
-    const neighborReadPath = this.selected.readPath.replace(/\.(\d+)$/, ($1, $2) => '.' + (parseInt($2) + distance))
-
-    return _.get(this.fileTree, neighborReadPath)
-  }
-
-  renderFileTree() {
-    const children = this.fileTree.children
-    let output = '\n'
+  renderFileTree(root = this.fileTree, indent = 0) {
+    const children = root.children
+    let output = ''
 
     children.forEach(itemPath => {
+      this.shownList.push(itemPath)
+
       if (itemPath === this.selected) {
-        output += chalk.cyan(itemPath.path + '\n')
+        output += chalk.cyan(' '.repeat(indent) + itemPath.name + '\n')
       }
       else {
-        output +=itemPath.path + '\n'
+        output += ' '.repeat(indent) + itemPath.name + '\n'
+      }
+
+      if (itemPath.open) {
+        output += this.renderFileTree(itemPath, indent + 2)
       }
     })
 
@@ -120,22 +98,13 @@ class FileTreeSelectionPrompt extends Base {
       message += chalk.dim('(Use arrow keys)');
     }
 
-    // Render choices or answer depending on the state
-    // if (this.status === 'answered') {
-    //   message += chalk.cyan(this.opt.choices.getChoice(this.selected).short);
-    // } else {
-    //   var choicesStr = listRender(this.opt.choices, this.selected);
-    //   var indexPosition = this.opt.choices.indexOf(
-    //     this.opt.choices.getChoice(this.selected)
-    //   );
-    //   message +=
-    //     '\n' + this.paginator.paginate(choicesStr, indexPosition, this.opt.pageSize);
-    // }
+    this.shownList = []
 
-    message += this.renderFileTree()
+    const fileTreeStr = this.renderFileTree()
+
+    message += '\n' + this.paginator.paginate(fileTreeStr + '-----------------', this.shownList.indexOf(this.selected), this.opt.pageSize)
 
     this.firstRender = false;
-
     this.screen.render(message);
   }
 
@@ -147,83 +116,48 @@ class FileTreeSelectionPrompt extends Base {
     this.status = 'answered';
 
     // Rerender prompt
-    this.render();
+    // this.render();
 
     this.screen.done();
     cliCursor.show();
     this.done(value);
   }
 
-  getCurrentValue() {
-    return this.opt.choices.getChoice(this.selected).value;
-  }
+  moveselected(distance = 0) {
+    const currentIndex = this.shownList.indexOf(this.selected)
+    let index = currentIndex + distance
 
-  moveSelected(distance = 0) {
-    const possibleSelected = this.findNeighborOfSlected(distance)
-
-    if (!possibleSelected) {
-      return
+    if (index >= this.shownList.length) {
+      index = 0
+    }
+    else if (index < 0) {
+      index = this.shownList.length - 1
     }
 
-    this.selected = possibleSelected
+    this.selected = this.shownList[index]
 
-    this.render();
+    this.render()
   }
 
   /**
    * When user press a key
    */
   onUpKey() {
-    this.moveSelected(-1)
+    this.moveselected(-1)
   }
 
   onDownKey() {
-    this.moveSelected(1)
+    this.moveselected(1)
   }
 
-  onNumberKey(input) {
-    if (input <= this.opt.choices.realLength) {
-      this.selected = input - 1;
+  onSpaceKey() {
+    if (!this.selected.children) {
+      return
     }
 
-    this.render();
+    this.selected.open = !this.selected.open
+    this.render()
   }
-}
-
-/**
- * Function for rendering list choices
- * @param  {Number} pointer Position of the pointer
- * @return {String}         Rendered content
- */
-function listRender(choices, pointer) {
-  var output = '';
-  var separatorOffset = 0;
-
-  choices.forEach((choice, i) => {
-    if (choice.type === 'separator') {
-      separatorOffset++;
-      output += '  ' + choice + '\n';
-      return;
-    }
-
-    if (choice.disabled) {
-      separatorOffset++;
-      output += '  - ' + choice.name;
-      output += ' (' + (_.isString(choice.disabled) ? choice.disabled : 'Disabled') + ')';
-      output += '\n';
-      return;
-    }
-
-    var isSelected = i - separatorOffset === pointer;
-    var line = (isSelected ? figures.pointer + ' ' : '  ') + choice.name;
-    if (isSelected) {
-      line = chalk.cyan(line);
-    }
-
-    output += line + ' \n';
-  });
-
-  return output.replace(/\n$/, '');
 }
 
 module.exports = FileTreeSelectionPrompt;
