@@ -1,7 +1,7 @@
 ## Inquirer File Tree Selection Prompt
 
 ### QuickDemo
-![QuickDemo]('./example/screenshot.gif)
+![QuickDemo]('example/screenshot.gif)
 
 ### Install
 ```
