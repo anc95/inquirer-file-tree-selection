@@ -9,7 +9,6 @@ const figures = require('figures');
 const cliCursor = require('cli-cursor');
 const path = require('path');
 const dirTree = require('directory-tree');
-// const runAsync = require('run-async');
 const { flatMap, map, take, takeUntil } = require('rxjs/operators');
 const Base = require('inquirer/lib/prompts/base');
 const observe = require('inquirer/lib/utils/events');
