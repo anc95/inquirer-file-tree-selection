@@ -13,6 +13,7 @@ const { flatMap, map, take, takeUntil } = require('rxjs/operators');
 const Base = require('inquirer/lib/prompts/base');
 const observe = require('inquirer/lib/utils/events');
 const Paginator = require('inquirer/lib/utils/paginator');
+const fs = require('fs');
 
 /**
  * type: string
@@ -65,18 +66,20 @@ class FileTreeSelectionPrompt extends Base {
     var self = this;
 
     var events = observe(this.rl);
+
+    var validation = this.handleSubmitEvents(events.line.pipe(map(() => this.selected.path)));
+    validation.success.forEach(this.onSubmit.bind(this));
+    validation.error.forEach(this.onError.bind(this));
+
     events.normalizedUpKey
-      .pipe(takeUntil(events.line))
+      .pipe(takeUntil(validation.success))
       .forEach(this.onUpKey.bind(this));
     events.normalizedDownKey
-      .pipe(takeUntil(events.line))
+      .pipe(takeUntil(validation.success))
       .forEach(this.onDownKey.bind(this));
     events.spaceKey
-      .pipe(takeUntil(events.line))
+      .pipe(takeUntil(validation.success))
       .forEach(this.onSpaceKey.bind(this));
-
-    events.line
-      .forEach(this.onSubmit.bind(this));
 
     cliCursor.hide();
     if (this.firstRender) {
@@ -123,7 +126,7 @@ class FileTreeSelectionPrompt extends Base {
    * @return {FileTreeSelectionPrompt} self
    */
 
-  render() {
+  render(error) {
     // Render question
     var message = this.getQuestion();
 
@@ -140,22 +143,44 @@ class FileTreeSelectionPrompt extends Base {
       message += '\n' + this.paginator.paginate(fileTreeStr + '-----------------', this.shownList.indexOf(this.selected), this.opt.pageSize)
     }
 
+    let bottomContent;
+
+    if (error) {
+      bottomContent = '\n' + chalk.red('>> ') + error;
+    }
+
     this.firstRender = false;
-    this.screen.render(message);
+    this.screen.render(message, bottomContent);
+  }
+
+  onEnd(state) {
+    this.status = 'answered';
+    this.answer = state.value;
+
+    // Re-render prompt
+    this.render();
+
+    this.screen.done();
+    console.log(state.value);
+    this.done(state.value);
+  }
+
+  onError(state) {
+    this.render(state.isValid);
   }
 
   /**
    * When user press `enter` key
    */
 
-  onSubmit() {
+  onSubmit(state) {
     this.status = 'answered';
 
     this.render();
 
     this.screen.done();
     cliCursor.show();
-    this.done(this.selected.path);
+    this.done(state.value);
   }
 
   moveselected(distance = 0) {
@@ -170,6 +195,8 @@ class FileTreeSelectionPrompt extends Base {
     }
 
     this.selected = this.shownList[index]
+
+
 
     this.render()
   }
