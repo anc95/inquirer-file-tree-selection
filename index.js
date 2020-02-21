@@ -23,20 +23,27 @@ class FileTreeSelectionPrompt extends Base {
   constructor(questions, rl, answers) {
     super(questions, rl, answers);
 
-    this.fileTree = dirTree(path.resolve(process.cwd(), this.opt.root || '.'))
+    const root = path.resolve(process.cwd(), this.opt.root || '.');
+    this.fileTree = dirTree(root)
     this.fileTree.children = this.fileTree.children || []
 
-    this.fileTree.children.unshift({
-      path: process.cwd(),
-      type: 'directory',
-      isCurrentDirectory: true,
-      name: '.(current directory)'
-    })
+    if (this.opt.hideRoot) {
+      this.selected = this.fileTree.children[0];
+    } else {
+      this.fileTree.children = [{
+        path: root,
+        type: 'directory',
+        isCurrentDirectory: true,
+        name: '.(root directory)',
+        open: true,
+        children: this.fileTree.children,
+      }];
+      this.selected = this.fileTree.children[0].children[0];
+    }
 
     this.shownList = []
 
     this.firstRender = true;
-    this.selected = this.fileTree.children[0];
 
     this.opt = {
       ...{
