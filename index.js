@@ -92,6 +92,9 @@ class FileTreeSelectionPrompt extends Base {
   renderFileTree(root = this.fileTree, indent = 2) {
     const children = root.children || []
     let output = ''
+    const transformer = this.opt.transformer;
+    const isFinal = this.status === 'answered';
+    let showValue;
 
     children.forEach(itemPath => {
       if (this.opt.onlyShowDir && itemPath.type !== 'directory') {
@@ -103,8 +106,16 @@ class FileTreeSelectionPrompt extends Base {
         ? itemPath.open
           ? figures.arrowDown + ' '
           : figures.arrowRight + ' '
-        : ''
-      const showValue = ' '.repeat(prefix ? indent - 2 : indent) + prefix + itemPath.name + '\n'
+        : itemPath === this.selected
+          ? figures.play + ' '
+          : ''
+
+      if (transformer) {
+        const transformedValue = transformer(itemPath.path, this.answers, { isFinal });
+        showValue = ' '.repeat(prefix ? indent - 2 : indent) + prefix + transformedValue + '\n';
+      } else {
+        showValue = ' '.repeat(prefix ? indent - 2 : indent) + prefix + itemPath.name + '\n'
+      }
 
       if (itemPath === this.selected) {
         output += chalk.cyan(showValue)
