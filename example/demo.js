@@ -1,5 +1,6 @@
 const inquirer = require('inquirer')
 const inquirerFileTreeSelection = require('../index')
+const path = require('path');
 
 inquirer.registerPrompt('file-tree-selection', inquirerFileTreeSelection)
 
@@ -8,7 +9,15 @@ inquirer
     {
       type: 'file-tree-selection',
       name: 'file',
-      message: 'choose a file'
+      message: 'choose a file',
+      validate: (item) => {
+        const name = item.split(path.sep).pop();
+        if (name[0] != ".") {
+          return "please select another file"
+        }
+        return true;
+      },
+      onlyShowValid: true
     }
   ])
   .then(answers => {

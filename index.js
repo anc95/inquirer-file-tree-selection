@@ -60,7 +60,7 @@ class FileTreeSelectionPrompt extends Base {
    * @return {this}
    */
 
-  _run(cb) {
+  async _run(cb) {
     this.done = cb;
 
     var self = this;
@@ -83,6 +83,45 @@ class FileTreeSelectionPrompt extends Base {
 
     cliCursor.hide();
     if (this.firstRender) {
+      const validate = this.opt.validate;
+      if (validate) {
+        const asyncForEach = async (array, callback) => {
+          for (let index = 0; index < array.length; index++) {
+            await callback(array[index], index, array);
+          }
+        };
+        const addValidity = async (fileObj) => {
+          const isValid = await validate(fileObj.path);
+          fileObj.isValid = false;
+          if (isValid === true) {
+            if (this.opt.onlyShowDir) {
+              if (fileObj.type == 'directory') {
+                fileObj.isValid = true;
+              }
+            } else {
+              fileObj.isValid = true;
+            }
+          }
+          if (fileObj.children) {
+            if (this.opt.hideChildrenOfValid && fileObj.isValid) {
+              fileObj.children.length = 0;
+            }
+            const children = fileObj.children.map(x => x);
+            for (let index = 0, length = children.length; index < length; index++) {
+              const child = children[index];
+              await addValidity(child);
+              if (child.isValid) {
+                fileObj.hasValidChild = true;
+              }
+              if (this.opt.onlyShowValid && !child.hasValidChild && !child.isValid) {
+                const spliceIndex = fileObj.children.indexOf(child);
+                fileObj.children.splice(spliceIndex, 1);
+              }
+            }
+          }
+        }
+        await addValidity(this.fileTree);
+      }
       this.render();
     }
 
@@ -99,15 +138,18 @@ class FileTreeSelectionPrompt extends Base {
       }
 
       this.shownList.push(itemPath)
-      let prefix = itemPath.children
+      let prefix = itemPath.children && itemPath.children.length
         ? itemPath.open
           ? figures.arrowDown + ' '
           : figures.arrowRight + ' '
         : ''
       const showValue = ' '.repeat(prefix ? indent - 2 : indent) + prefix + itemPath.name + '\n'
 
-      if (itemPath === this.selected) {
+      if (itemPath === this.selected && itemPath.isValid) {
         output += chalk.cyan(showValue)
+      }
+      else if (itemPath === this.selected && !itemPath.isValid) {
+        output += chalk.red(showValue)
       }
       else {
         output += showValue
