@@ -85,11 +85,6 @@ class FileTreeSelectionPrompt extends Base {
     if (this.firstRender) {
       const validate = this.opt.validate;
       if (validate) {
-        const asyncForEach = async (array, callback) => {
-          for (let index = 0; index < array.length; index++) {
-            await callback(array[index], index, array);
-          }
-        };
         const addValidity = async (fileObj) => {
           const isValid = await validate(fileObj.path);
           fileObj.isValid = false;
