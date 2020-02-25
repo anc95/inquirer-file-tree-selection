@@ -9,7 +9,8 @@ const figures = require('figures');
 const cliCursor = require('cli-cursor');
 const path = require('path');
 const dirTree = require('directory-tree');
-const { flatMap, map, take, takeUntil } = require('rxjs/operators');
+const { fromEvent } = require('rxjs');
+const { filter, share, flatMap, map, take, takeUntil } = require('rxjs/operators');
 const Base = require('inquirer/lib/prompts/base');
 const observe = require('inquirer/lib/utils/events');
 const Paginator = require('inquirer/lib/utils/paginator');
@@ -23,20 +24,27 @@ class FileTreeSelectionPrompt extends Base {
   constructor(questions, rl, answers) {
     super(questions, rl, answers);
 
-    this.fileTree = dirTree(path.resolve(process.cwd(), this.opt.root || '.'))
+    const root = path.resolve(process.cwd(), this.opt.root || '.');
+    this.fileTree = dirTree(root)
     this.fileTree.children = this.fileTree.children || []
 
-    this.fileTree.children.unshift({
-      path: process.cwd(),
-      type: 'directory',
-      isCurrentDirectory: true,
-      name: '.(current directory)'
-    })
+    if (this.opt.hideRoot) {
+      this.selected = this.fileTree.children[0];
+    } else {
+      this.fileTree.children = [{
+        path: root,
+        type: 'directory',
+        isCurrentDirectory: true,
+        name: '.(root directory)',
+        open: true,
+        children: this.fileTree.children,
+      }];
+      this.selected = this.fileTree.children[0].children[0];
+    }
 
     this.shownList = []
 
     this.firstRender = true;
-    this.selected = this.fileTree.children[0];
 
     this.opt = {
       ...{
@@ -78,6 +86,14 @@ class FileTreeSelectionPrompt extends Base {
       .pipe(takeUntil(validation.success))
       .forEach(this.onDownKey.bind(this));
     events.spaceKey
+      .pipe(takeUntil(validation.success))
+      .forEach(this.onSpaceKey.bind(this));
+
+    function normalizeKeypressEvents(value, key) {
+      return { value: value, key: key || {} };
+    }
+    fromEvent(this.rl.input, 'keypress', normalizeKeypressEvents)
+      .pipe(filter(({ key }) => key && key.name === 'tab'), share())
       .pipe(takeUntil(validation.success))
       .forEach(this.onSpaceKey.bind(this));
 
@@ -126,6 +142,9 @@ class FileTreeSelectionPrompt extends Base {
   renderFileTree(root = this.fileTree, indent = 2) {
     const children = root.children || []
     let output = ''
+    const transformer = this.opt.transformer;
+    const isFinal = this.status === 'answered';
+    let showValue;
 
     children.forEach(itemPath => {
       if (this.opt.onlyShowDir && itemPath.type !== 'directory') {
@@ -137,8 +156,16 @@ class FileTreeSelectionPrompt extends Base {
         ? itemPath.open
           ? figures.arrowDown + ' '
           : figures.arrowRight + ' '
-        : ''
-      const showValue = ' '.repeat(prefix ? indent - 2 : indent) + prefix + itemPath.name + '\n'
+        : itemPath === this.selected
+          ? figures.play + ' '
+          : ''
+
+      if (transformer) {
+        const transformedValue = transformer(itemPath.path, this.answers, { isFinal });
+        showValue = ' '.repeat(prefix ? indent - 2 : indent) + prefix + transformedValue + '\n';
+      } else {
+        showValue = ' '.repeat(prefix ? indent - 2 : indent) + prefix + itemPath.name + '\n'
+      }
 
       if (itemPath === this.selected && itemPath.isValid) {
         output += chalk.cyan(showValue)
