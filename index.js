@@ -9,7 +9,8 @@ const figures = require('figures');
 const cliCursor = require('cli-cursor');
 const path = require('path');
 const dirTree = require('directory-tree');
-const { flatMap, map, take, takeUntil } = require('rxjs/operators');
+const { fromEvent } = require('rxjs');
+const { filter, share, flatMap, map, take, takeUntil } = require('rxjs/operators');
 const Base = require('inquirer/lib/prompts/base');
 const observe = require('inquirer/lib/utils/events');
 const Paginator = require('inquirer/lib/utils/paginator');
@@ -78,6 +79,14 @@ class FileTreeSelectionPrompt extends Base {
       .pipe(takeUntil(validation.success))
       .forEach(this.onDownKey.bind(this));
     events.spaceKey
+      .pipe(takeUntil(validation.success))
+      .forEach(this.onSpaceKey.bind(this));
+
+    function normalizeKeypressEvents(value, key) {
+      return { value: value, key: key || {} };
+    }
+    fromEvent(this.rl.input, 'keypress', normalizeKeypressEvents)
+      .pipe(filter(({ key }) => key && key.name === 'tab'), share())
       .pipe(takeUntil(validation.success))
       .forEach(this.onSpaceKey.bind(this));
 
