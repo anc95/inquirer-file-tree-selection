@@ -19,10 +19,11 @@ inquirer.prompt({
 ```
 
 ### Options
-Takes type, name, message[filter, validate, default, pageSize, onlyShowDir, root] properties.
+Takes `type`, `name`, `message`, [`filter`, `validate`, `default`, `pageSize`, `onlyShowDir`, `root`, `hideRoot`] properties.
 The extra options that this plugin provides are:
 - `onlyShowDir`:  (Boolean) if true, will only show directory. Default: false.
 - `root`: (String) it is the root of file tree. Default: process.cwd().
+- `hideRoot`: (Boolean) if true, will hide the root directory. Default: false.
 
 ### Example
 ```
