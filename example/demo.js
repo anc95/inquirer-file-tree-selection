@@ -11,6 +11,14 @@ inquirer
       type: 'file-tree-selection',
       name: 'file',
       message: 'choose a file',
+      validate: (item) => {
+        const name = item.split(path.sep).pop();
+        if (name[0] != ".") {
+          return "please select another file"
+        }
+        return true;
+      },
+      onlyShowValid: true
       transformer: (input) => {
         const name = input.split(path.sep).pop();
         if (name[0] == ".") {
