@@ -14,7 +14,6 @@ const { filter, share, flatMap, map, take, takeUntil } = require('rxjs/operators
 const Base = require('inquirer/lib/prompts/base');
 const observe = require('inquirer/lib/utils/events');
 const Paginator = require('inquirer/lib/utils/paginator');
-const fs = require('fs');
 
 /**
  * type: string
@@ -57,7 +56,6 @@ class FileTreeSelectionPrompt extends Base {
 
     // Make sure no default is set (so it won't be printed)
     this.opt.default = null;
-    this.opt.pageSize = 10
 
     this.paginator = new Paginator(this.screen);
   }
@@ -152,7 +150,7 @@ class FileTreeSelectionPrompt extends Base {
       }
 
       this.shownList.push(itemPath)
-      let prefix = itemPath.children && itemPath.children.length
+      let prefix = itemPath.children
         ? itemPath.open
           ? figures.arrowDown + ' '
           : figures.arrowRight + ' '
@@ -164,7 +162,7 @@ class FileTreeSelectionPrompt extends Base {
         const transformedValue = transformer(itemPath.path, this.answers, { isFinal });
         showValue = ' '.repeat(prefix ? indent - 2 : indent) + prefix + transformedValue + '\n';
       } else {
-        showValue = ' '.repeat(prefix ? indent - 2 : indent) + prefix + itemPath.name + '\n'
+        showValue = ' '.repeat(prefix ? indent - 2 : indent) + prefix + itemPath.name + (itemPath.type === 'directory' ? path.sep : '')  + '\n'
       }
 
       if (itemPath === this.selected && itemPath.isValid) {
@@ -204,7 +202,7 @@ class FileTreeSelectionPrompt extends Base {
     else {
       this.shownList = []
       const fileTreeStr = this.renderFileTree()
-      message += '\n' + this.paginator.paginate(fileTreeStr + '-----------------', this.shownList.indexOf(this.selected), this.opt.pageSize)
+      message += '\n' + this.paginator.paginate(fileTreeStr + '----------------', this.shownList.indexOf(this.selected), this.opt.pageSize);
     }
 
     let bottomContent;
@@ -225,7 +223,6 @@ class FileTreeSelectionPrompt extends Base {
     this.render();
 
     this.screen.done();
-    console.log(state.value);
     this.done(state.value);
   }
 
@@ -259,8 +256,6 @@ class FileTreeSelectionPrompt extends Base {
     }
 
     this.selected = this.shownList[index]
-
-
 
     this.render()
   }
