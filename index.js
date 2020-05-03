@@ -28,7 +28,7 @@ class FileTreeSelectionPrompt extends Base {
     this.fileTree.children = this.fileTree.children || []
 
     if (this.opt.hideRoot) {
-      this.selected = this.fileTree.children[0];
+      this.active = this.fileTree.children[0];
     } else {
       this.fileTree.children = [{
         path: root,
@@ -38,7 +38,7 @@ class FileTreeSelectionPrompt extends Base {
         open: true,
         children: this.fileTree.children,
       }];
-      this.selected = this.fileTree.children[0].children[0];
+      this.active = this.fileTree.children[0].children[0];
     }
 
     this.shownList = []
@@ -49,14 +49,15 @@ class FileTreeSelectionPrompt extends Base {
       ...{
         default: null,
         pageSize: 10,
-        onlyShowDir: false
+        onlyShowDir: false,
+        multiple: false
       },
       ...this.opt
     }
 
     // Make sure no default is set (so it won't be printed)
     this.opt.default = null;
-
+    this.selectedList = [];
     this.paginator = new Paginator(this.screen);
   }
 
@@ -73,7 +74,7 @@ class FileTreeSelectionPrompt extends Base {
 
     var events = observe(this.rl);
 
-    var validation = this.handleSubmitEvents(events.line.pipe(map(() => this.selected.path)));
+    var validation = this.handleSubmitEvents(events.line.pipe(map(() => this.active.path)));
     validation.success.forEach(this.onSubmit.bind(this));
     validation.error.forEach(this.onError.bind(this));
 
@@ -85,7 +86,7 @@ class FileTreeSelectionPrompt extends Base {
       .forEach(this.onDownKey.bind(this));
     events.spaceKey
       .pipe(takeUntil(validation.success))
-      .forEach(this.onSpaceKey.bind(this));
+      .forEach(this.onSpaceKey.bind(this, false));
 
     function normalizeKeypressEvents(value, key) {
       return { value: value, key: key || {} };
@@ -93,7 +94,7 @@ class FileTreeSelectionPrompt extends Base {
     fromEvent(this.rl.input, 'keypress', normalizeKeypressEvents)
       .pipe(filter(({ key }) => key && key.name === 'tab'), share())
       .pipe(takeUntil(validation.success))
-      .forEach(this.onSpaceKey.bind(this));
+      .forEach(this.onSpaceKey.bind(this, true));
 
     cliCursor.hide();
     if (this.firstRender) {
@@ -154,21 +155,27 @@ class FileTreeSelectionPrompt extends Base {
         ? itemPath.open
           ? figures.arrowDown + ' '
           : figures.arrowRight + ' '
-        : itemPath === this.selected
+        : itemPath === this.active
           ? figures.play + ' '
           : ''
 
-      if (transformer) {
-        const transformedValue = transformer(itemPath.path, this.answers, { isFinal });
-        showValue = ' '.repeat(prefix ? indent - 2 : indent) + prefix + transformedValue + '\n';
-      } else {
-        showValue = ' '.repeat(prefix ? indent - 2 : indent) + prefix + itemPath.name + (itemPath.type === 'directory' ? path.sep : '')  + '\n'
+      // when multiple is true, add radio icon at prefix
+      if (this.opt.multiple) {
+        prefix += this.selectedList.includes(itemPath.path) ? figures.radioOn : figures.radioOff;
+        prefix += ' ';
       }
 
-      if (itemPath === this.selected && itemPath.isValid) {
+      if (transformer) {
+        const transformedValue = transformer(itemPath.path, this.answers, { isFinal });
+        showValue = ' '.repeat(indent - prefix.length + 2) + prefix + transformedValue + '\n';
+      } else {
+        showValue = ' '.repeat(indent - prefix.length + 2) + prefix + itemPath.name + (itemPath.type === 'directory' ? path.sep : '')  + '\n'
+      }
+
+      if (itemPath === this.active && itemPath.isValid) {
         output += chalk.cyan(showValue)
       }
-      else if (itemPath === this.selected && !itemPath.isValid) {
+      else if (itemPath === this.active && !itemPath.isValid) {
         output += chalk.red(showValue)
       }
       else {
@@ -197,12 +204,12 @@ class FileTreeSelectionPrompt extends Base {
     }
 
     if (this.status === 'answered') {
-      message += chalk.cyan(this.selected.path)
+      message += chalk.cyan(this.opt.multiple ? this.selectedList.join(', ') : this.active.path)
     }
     else {
       this.shownList = []
       const fileTreeStr = this.renderFileTree()
-      message += '\n' + this.paginator.paginate(fileTreeStr + '----------------', this.shownList.indexOf(this.selected), this.opt.pageSize);
+      message += '\n' + this.paginator.paginate(fileTreeStr + '----------------', this.shownList.indexOf(this.active), this.opt.pageSize);
     }
 
     let bottomContent;
@@ -241,11 +248,11 @@ class FileTreeSelectionPrompt extends Base {
 
     this.screen.done();
     cliCursor.show();
-    this.done(state.value);
+    this.done(this.opt.multiple ? this.selectedList :state.value);
   }
 
-  moveselected(distance = 0) {
-    const currentIndex = this.shownList.indexOf(this.selected)
+  moveActive(distance = 0) {
+    const currentIndex = this.shownList.indexOf(this.active)
     let index = currentIndex + distance
 
     if (index >= this.shownList.length) {
@@ -255,7 +262,7 @@ class FileTreeSelectionPrompt extends Base {
       index = this.shownList.length - 1
     }
 
-    this.selected = this.shownList[index]
+    this.active = this.shownList[index]
 
     this.render()
   }
@@ -264,19 +271,35 @@ class FileTreeSelectionPrompt extends Base {
    * When user press a key
    */
   onUpKey() {
-    this.moveselected(-1)
+    this.moveActive(-1)
   }
 
   onDownKey() {
-    this.moveselected(1)
+    this.moveActive(1)
   }
 
-  onSpaceKey() {
-    if (!this.selected.children) {
+  onSpaceKey(tirggerByTab = false) {
+    if (!tirggerByTab && this.opt.multiple) {
+      if (this.active.isValid === false) {
+        return
+      }
+
+      if (this.selectedList.includes(this.active.path)) {
+        this.selectedList.splice(this.selectedList.indexOf(this.active.path), 1);
+      }
+      else {
+        this.selectedList.push(this.active.path);
+      }
+
+      this.render()
       return
     }
 
-    this.selected.open = !this.selected.open
+    if (!this.active.children) {
+      return
+    }
+
+    this.active.open = !this.active.open
     this.render()
   }
 }
