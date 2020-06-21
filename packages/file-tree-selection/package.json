@@ -1,0 +1,28 @@
+{
+  "name": "inquirer-file-tree-selection-prompt",
+  "version": "1.0.6",
+  "repository": "https://github.com/anc95/inquirer-file-tree-selection",
+  "description": "inquerer file tree selection prompt",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "inquerer",
+    "filetree"
+  ],
+  "author": "anc95",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^2.4.2",
+    "cli-cursor": "^3.1.0",
+    "directory-tree": "^2.2.3",
+    "figures": "^3.0.0",
+    "lodash": "^4.17.11",
+    "rxjs": "^6.5.2"
+  },
+  "devDependencies": {
+    "inquirer": "^6.4.0",
+    "lerna": "^3.22.1"
+  }
+}
