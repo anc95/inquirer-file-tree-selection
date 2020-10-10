@@ -1,13 +1,13 @@
 {
   "name": "inquirer-file-tree-selection-prompt",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "repository": "https://github.com/anc95/inquirer-file-tree-selection",
   "description": "inquerer file tree selection prompt",
   "main": "index.js",
   "scripts": {
     "changelog": "auto-changelog",
     "postpublish": "git push origin --all; git push origin --tags",
-    "prepublish": "changelog"
+    "prepublish": "npm run changelog"
   },
   "keywords": [
     "inquerer",
