@@ -164,12 +164,14 @@ class FileTreeSelectionPrompt extends Base {
         prefix += this.selectedList.includes(itemPath.path) ? figures.radioOn : figures.radioOff;
         prefix += ' ';
       }
-
+      const safeIndent = (indent - prefix.length + 2) > 0
+        ? indent - prefix.length + 2
+        : 0 ;
       if (transformer) {
         const transformedValue = transformer(itemPath.path, this.answers, { isFinal });
-        showValue = ' '.repeat(indent - prefix.length + 2) + prefix + transformedValue + '\n';
+        showValue = ' '.repeat(safeIndent) + prefix + transformedValue + '\n';
       } else {
-        showValue = ' '.repeat(indent - prefix.length + 2) + prefix + itemPath.name + (itemPath.type === 'directory' ? path.sep : '')  + '\n'
+        showValue = ' '.repeat(safeIndent) + prefix + itemPath.name + (itemPath.type === 'directory' ? path.sep : '')  + '\n'
       }
 
       if (itemPath === this.active && itemPath.isValid) {
