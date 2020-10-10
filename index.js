@@ -8,6 +8,7 @@ const chalk = require('chalk');
 const figures = require('figures');
 const cliCursor = require('cli-cursor');
 const path = require('path');
+const fs = require('fs');
 const dirTree = require('directory-tree');
 const { fromEvent } = require('rxjs');
 const { filter, share, flatMap, map, take, takeUntil } = require('rxjs/operators');
@@ -24,22 +25,16 @@ class FileTreeSelectionPrompt extends Base {
     super(questions, rl, answers);
 
     const root = path.resolve(process.cwd(), this.opt.root || '.');
-    this.fileTree = dirTree(root)
-    this.fileTree.children = this.fileTree.children || []
-
-    if (this.opt.hideRoot) {
-      this.active = this.fileTree.children[0];
-    } else {
-      this.fileTree.children = [{
-        path: root,
-        type: 'directory',
-        isCurrentDirectory: true,
-        name: '.(root directory)',
-        open: true,
-        children: this.fileTree.children,
-      }];
-      this.active = this.fileTree.children[0].children[0];
+    const rootNode = {
+      path: root,
+      type: 'directory',
+      name: '.(root directory)',
+      _rootNode: true
     }
+
+    this.fileTree = {
+      children: [rootNode]
+    };    
 
     this.shownList = []
 
@@ -98,39 +93,15 @@ class FileTreeSelectionPrompt extends Base {
 
     cliCursor.hide();
     if (this.firstRender) {
-      const validate = this.opt.validate;
-      if (validate) {
-        const addValidity = async (fileObj) => {
-          const isValid = await validate(fileObj.path);
-          fileObj.isValid = false;
-          if (isValid === true) {
-            if (this.opt.onlyShowDir) {
-              if (fileObj.type == 'directory') {
-                fileObj.isValid = true;
-              }
-            } else {
-              fileObj.isValid = true;
-            }
-          }
-          if (fileObj.children) {
-            if (this.opt.hideChildrenOfValid && fileObj.isValid) {
-              fileObj.children.length = 0;
-            }
-            const children = fileObj.children.map(x => x);
-            for (let index = 0, length = children.length; index < length; index++) {
-              const child = children[index];
-              await addValidity(child);
-              if (child.isValid) {
-                fileObj.hasValidChild = true;
-              }
-              if (this.opt.onlyShowValid && !child.hasValidChild && !child.isValid) {
-                const spliceIndex = fileObj.children.indexOf(child);
-                fileObj.children.splice(spliceIndex, 1);
-              }
-            }
-          }
-        }
-        await addValidity(this.fileTree);
+      const rootNode = this.fileTree.children[0];
+
+      await this.prepareChildren(rootNode);
+      rootNode.open = true;
+      if (this.opt.hideRoot) {
+        this.fileTree.children = rootNode.children;
+        this.active = this.fileTree.children[0];
+      } else {
+        this.active = rootNode.children[0];
       }
       this.render();
     }
@@ -190,6 +161,66 @@ class FileTreeSelectionPrompt extends Base {
     })
 
     return output
+  }
+
+  async prepareChildren(node) {
+    const parentPath = node.path;
+
+    if (!fs.lstatSync(parentPath).isDirectory() || node.children || node.open === true) {
+      return;
+    }
+
+    try {
+      const children = fs.readdirSync(parentPath, {withFileTypes: true}).map(item => {
+        return {
+          type: item.isDirectory() ? 'directory' : 'file',
+          name: item.name,
+          path: path.resolve(parentPath, item.name)
+        }
+      });
+  
+      node.children = children;
+    } catch (e) { 
+      // maybe for permission denied, we cant read the dir
+      // do nothing here  
+    }
+
+    const validate = this.opt.validate;
+    if (validate) {
+      const addValidity = async (fileObj) => {
+        const isValid = await validate(fileObj.path);
+        fileObj.isValid = false;
+        if (isValid === true) {
+          if (this.opt.onlyShowDir) {
+            if (fileObj.type == 'directory') {
+              fileObj.isValid = true;
+            }
+          } else {
+            fileObj.isValid = true;
+          }
+        }
+        if (fileObj.children) {
+          if (this.opt.hideChildrenOfValid && fileObj.isValid) {
+            fileObj.children.length = 0;
+          }
+          const children = fileObj.children.map(x => x);
+          for (let index = 0, length = children.length; index < length; index++) {
+            const child = children[index];
+            await addValidity(child);
+            if (child.isValid) {
+              fileObj.hasValidChild = true;
+            }
+            if (this.opt.onlyShowValid && !child.hasValidChild && !child.isValid) {
+              const spliceIndex = fileObj.children.indexOf(child);
+              fileObj.children.splice(spliceIndex, 1);
+            }
+          }
+        }
+      }
+      await addValidity(node);
+    }
+
+    !node._rootNode && this.render();
   }
 
   /**
@@ -265,7 +296,7 @@ class FileTreeSelectionPrompt extends Base {
     }
 
     this.active = this.shownList[index]
-
+    this.prepareChildren(this.active);
     this.render()
   }
 
@@ -297,7 +328,7 @@ class FileTreeSelectionPrompt extends Base {
       return
     }
 
-    if (!this.active.children) {
+    if (this.active.children && this.active.children.length === 0) {
       return
     }
 
