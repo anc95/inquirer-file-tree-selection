@@ -5,7 +5,9 @@
   "description": "inquerer file tree selection prompt",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "changelog": "auto-changelog",
+    "postpublish": "git push origin --all; git push origin --tags",
+    "prepublish": "changelog"
   },
   "keywords": [
     "inquerer",
@@ -22,6 +24,7 @@
     "rxjs": "^6.5.2"
   },
   "devDependencies": {
+    "auto-changelog": "^2.2.1",
     "inquirer": "^6.4.0"
   }
 }
