@@ -79,6 +79,18 @@ class FileTreeSelectionPrompt extends Base {
     events.normalizedDownKey
       .pipe(takeUntil(validation.success))
       .forEach(this.onDownKey.bind(this));
+    events.keypress.pipe(
+        filter(({ key }) => key.name === 'right'),
+        share()
+      )
+      .pipe(takeUntil(validation.success))
+      .forEach(this.onRigthKey.bind(this));
+    events.keypress.pipe(
+        filter(({ key }) => key.name === 'left'),
+        share()
+      )
+      .pipe(takeUntil(validation.success))
+      .forEach(this.onLeftKey.bind(this));
     events.spaceKey
       .pipe(takeUntil(validation.success))
       .forEach(this.onSpaceKey.bind(this, false));
@@ -173,6 +185,7 @@ class FileTreeSelectionPrompt extends Base {
     try {
       const children = fs.readdirSync(parentPath, {withFileTypes: true}).map(item => {
         return {
+          parent: node,
           type: item.isDirectory() ? 'directory' : 'file',
           name: item.name,
           path: path.resolve(parentPath, item.name)
@@ -309,6 +322,19 @@ class FileTreeSelectionPrompt extends Base {
 
   onDownKey() {
     this.moveActive(1)
+  }
+
+  onLeftKey() {
+    if ((this.active.type === 'file' || !this.active.open) && this.active.parent) {
+      this.active = this.active.parent;
+    }
+    this.active.open = false;
+    this.render()
+  }
+
+  onRigthKey() {
+    this.active.open = true
+    this.render()
   }
 
   onSpaceKey(tirggerByTab = false) {

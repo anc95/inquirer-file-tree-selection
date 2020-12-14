@@ -8,6 +8,7 @@ inquirer.registerPrompt('file-tree-selection', inquirerFileTreeSelection)
 inquirer
   .prompt([
     {
+      root: '..',
       type: 'file-tree-selection',
       name: 'files',
       message: 'choose files',
