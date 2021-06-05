@@ -18,7 +18,6 @@
   "dependencies": {
     "chalk": "^2.4.2",
     "cli-cursor": "^3.1.0",
-    "directory-tree": "^2.2.3",
     "figures": "^3.0.0",
     "lodash": "^4.17.11",
     "rxjs": "^6.5.2"
