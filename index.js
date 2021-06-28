@@ -133,7 +133,7 @@ class FileTreeSelectionPrompt extends Base {
       }
 
       this.shownList.push(itemPath)
-      let prefix = itemPath.children
+      let prefix = itemPath.type === 'directory'
         ? itemPath.open
           ? figures.arrowDown + ' '
           : figures.arrowRight + ' '
@@ -198,9 +198,17 @@ class FileTreeSelectionPrompt extends Base {
     }
 
     const validate = this.opt.validate;
+    const filter = async val => {
+      if (!this.opt.filter) {
+        return val;
+      }
+
+      return await this.opt.filter(val);
+    };
+
     if (validate) {
       const addValidity = async (fileObj) => {
-        const isValid = await validate(fileObj.path);
+        const isValid = await validate(await filter(fileObj.path), this.answers);
         fileObj.isValid = false;
         if (isValid === true) {
           if (this.opt.onlyShowDir) {
