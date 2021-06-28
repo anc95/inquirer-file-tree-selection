@@ -10,7 +10,7 @@
     "prepublish": "npm run changelog"
   },
   "keywords": [
-    "inquerer",
+    "inquirer",
     "filetree"
   ],
   "author": "anc95",
