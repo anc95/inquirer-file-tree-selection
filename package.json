@@ -6,8 +6,7 @@
   "main": "index.js",
   "scripts": {
     "changelog": "auto-changelog",
-    "postpublish": "git push origin --all; git push origin --tags",
-    "prepublish": "npm run changelog"
+    "postpublish": "npm run changelog && git push origin --all; git push origin --tags"
   },
   "keywords": [
     "inquirer",
