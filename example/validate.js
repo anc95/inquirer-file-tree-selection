@@ -1,7 +1,6 @@
 const inquirer = require('inquirer')
 const inquirerFileTreeSelection = require('../index')
 const path = require('path');
-const chalk = require('chalk');
 
 inquirer.registerPrompt('file-tree-selection', inquirerFileTreeSelection)
 
