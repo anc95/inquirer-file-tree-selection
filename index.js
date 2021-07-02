@@ -10,7 +10,7 @@ const cliCursor = require('cli-cursor');
 const path = require('path');
 const fs = require('fs');
 const { fromEvent } = require('rxjs');
-const { filter, share, flatMap, map, take, takeUntil } = require('rxjs/operators');
+const { filter, share, map, takeUntil } = require('rxjs/operators');
 const Base = require('inquirer/lib/prompts/base');
 const observe = require('inquirer/lib/utils/events');
 const Paginator = require('inquirer/lib/utils/paginator');
@@ -63,8 +63,6 @@ class FileTreeSelectionPrompt extends Base {
 
   async _run(cb) {
     this.done = cb;
-
-    var self = this;
 
     var events = observe(this.rl);
 
