@@ -1,5 +1,7 @@
 ## Inquirer File Tree Selection Prompt
 
+[![Node.js Package](https://github.com/anc95/inquirer-file-tree-selection/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/anc95/inquirer-file-tree-selection/actions/workflows/npm-publish.yml)
+
 ### QuickDemo
 ![QuickDemo](./example/screenshot.gif)
 
