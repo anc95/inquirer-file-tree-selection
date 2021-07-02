@@ -9,7 +9,7 @@
     "postpublish": "npm run changelog && git push origin --all; git push origin --tags"
   },
   "publishConfig": {
-    "registry":"https://npm.pkg.github.com/anc95"
+    "registry": "https://registry.npmjs.org/"
   },
   "keywords": [
     "inquirer",
