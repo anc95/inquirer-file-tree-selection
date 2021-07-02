@@ -1,6 +1,6 @@
 {
   "name": "inquirer-file-tree-selection-prompt",
-  "version": "1.0.8",
+  "version": "1.0.11",
   "repository": "https://github.com/anc95/inquirer-file-tree-selection",
   "description": "inquerer file tree selection prompt",
   "main": "index.js",
