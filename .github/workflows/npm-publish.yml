@@ -16,6 +16,7 @@ jobs:
         with:
           node-version: 14
           registry-url: https://registry.npmjs.org/
+      - run: npm install
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ae50ac17-ef69-4609-bf64-d20038085641
