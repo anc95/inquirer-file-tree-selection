@@ -9,8 +9,8 @@ const figures = require('figures');
 const cliCursor = require('cli-cursor');
 const path = require('path');
 const fs = require('fs');
-const { fromEvent } = require('rxjs');
-const { filter, share, map, takeUntil } = require('rxjs/operators');
+const {fromEvent} = require('rxjs');
+const {filter, share, map, takeUntil} = require('rxjs/operators');
 const Base = require('inquirer/lib/prompts/base');
 const observe = require('inquirer/lib/utils/events');
 const Paginator = require('inquirer/lib/utils/paginator');
@@ -33,7 +33,7 @@ class FileTreeSelectionPrompt extends Base {
 
     this.fileTree = {
       children: [rootNode]
-    };    
+    };
 
     this.shownList = []
 
@@ -77,15 +77,15 @@ class FileTreeSelectionPrompt extends Base {
       .pipe(takeUntil(validation.success))
       .forEach(this.onDownKey.bind(this));
     events.keypress.pipe(
-        filter(({ key }) => key.name === 'right'),
-        share()
-      )
+      filter(({key}) => key.name === 'right'),
+      share()
+    )
       .pipe(takeUntil(validation.success))
       .forEach(this.onRigthKey.bind(this));
     events.keypress.pipe(
-        filter(({ key }) => key.name === 'left'),
-        share()
-      )
+      filter(({key}) => key.name === 'left'),
+      share()
+    )
       .pipe(takeUntil(validation.success))
       .forEach(this.onLeftKey.bind(this));
     events.spaceKey
@@ -93,20 +93,20 @@ class FileTreeSelectionPrompt extends Base {
       .forEach(this.onSpaceKey.bind(this, false));
 
     function normalizeKeypressEvents(value, key) {
-      return { value: value, key: key || {} };
+      return {value: value, key: key || {}};
     }
     fromEvent(this.rl.input, 'keypress', normalizeKeypressEvents)
-      .pipe(filter(({ key }) => key && key.name === 'tab'), share())
+      .pipe(filter(({key}) => key && key.name === 'tab'), share())
       .pipe(takeUntil(validation.success))
       .forEach(this.onSpaceKey.bind(this, true));
 
     cliCursor.hide();
-    if (this.firstRender) {
+    if(this.firstRender) {
       const rootNode = this.fileTree.children[0];
 
       await this.prepareChildren(rootNode);
       rootNode.open = true;
-      if (this.opt.hideRoot) {
+      if(this.opt.hideRoot) {
         this.fileTree.children = rootNode.children;
         this.active = this.fileTree.children[0];
       } else {
@@ -126,7 +126,7 @@ class FileTreeSelectionPrompt extends Base {
     let showValue;
 
     children.forEach(itemPath => {
-      if (this.opt.onlyShowDir && itemPath.type !== 'directory') {
+      if(this.opt.onlyShowDir && itemPath.type !== 'directory') {
         return
       }
 
@@ -140,31 +140,31 @@ class FileTreeSelectionPrompt extends Base {
           : ''
 
       // when multiple is true, add radio icon at prefix
-      if (this.opt.multiple) {
+      if(this.opt.multiple) {
         prefix += this.selectedList.includes(itemPath.path) ? figures.radioOn : figures.radioOff;
         prefix += ' ';
       }
       const safeIndent = (indent - prefix.length + 2) > 0
         ? indent - prefix.length + 2
-        : 0 ;
-      if (transformer) {
-        const transformedValue = transformer(itemPath.path, this.answers, { isFinal });
+        : 0;
+      if(transformer) {
+        const transformedValue = transformer(itemPath.path, this.answers, {isFinal});
         showValue = ' '.repeat(safeIndent) + prefix + transformedValue + '\n';
       } else {
-        showValue = ' '.repeat(safeIndent) + prefix + itemPath.name + (itemPath.type === 'directory' ? path.sep : '')  + '\n'
+        showValue = ' '.repeat(safeIndent) + prefix + itemPath.name + (itemPath.type === 'directory' ? path.sep : '') + '\n'
       }
 
-      if (itemPath === this.active && itemPath.isValid) {
+      if(itemPath === this.active && itemPath.isValid) {
         output += chalk.cyan(showValue)
       }
-      else if (itemPath === this.active && !itemPath.isValid) {
+      else if(itemPath === this.active && !itemPath.isValid) {
         output += chalk.red(showValue)
       }
       else {
         output += showValue
       }
 
-      if (itemPath.open) {
+      if(itemPath.open) {
         output += this.renderFileTree(itemPath, indent + 2)
       }
     })
@@ -175,11 +175,11 @@ class FileTreeSelectionPrompt extends Base {
   async prepareChildren(node) {
     const parentPath = node.path;
 
-    if (!fs.lstatSync(parentPath).isDirectory() || node.children || node.open === true) {
-      return;
-    }
-
     try {
+      if(!fs.lstatSync(parentPath).isDirectory() || node.children || node.open === true) {
+        return;
+      }
+
       const children = fs.readdirSync(parentPath, {withFileTypes: true}).map(item => {
         return {
           parent: node,
@@ -188,47 +188,47 @@ class FileTreeSelectionPrompt extends Base {
           path: path.resolve(parentPath, item.name)
         }
       });
-  
+
       node.children = children;
-    } catch (e) { 
+    } catch(e) {
       // maybe for permission denied, we cant read the dir
       // do nothing here  
     }
 
     const validate = this.opt.validate;
     const filter = async val => {
-      if (!this.opt.filter) {
+      if(!this.opt.filter) {
         return val;
       }
 
       return await this.opt.filter(val);
     };
 
-    if (validate) {
+    if(validate) {
       const addValidity = async (fileObj) => {
         const isValid = await validate(await filter(fileObj.path), this.answers);
         fileObj.isValid = false;
-        if (isValid === true) {
-          if (this.opt.onlyShowDir) {
-            if (fileObj.type == 'directory') {
+        if(isValid === true) {
+          if(this.opt.onlyShowDir) {
+            if(fileObj.type == 'directory') {
               fileObj.isValid = true;
             }
           } else {
             fileObj.isValid = true;
           }
         }
-        if (fileObj.children) {
-          if (this.opt.hideChildrenOfValid && fileObj.isValid) {
+        if(fileObj.children) {
+          if(this.opt.hideChildrenOfValid && fileObj.isValid) {
             fileObj.children.length = 0;
           }
           const children = fileObj.children.map(x => x);
-          for (let index = 0, length = children.length; index < length; index++) {
+          for(let index = 0, length = children.length; index < length; index++) {
             const child = children[index];
             await addValidity(child);
-            if (child.isValid) {
+            if(child.isValid) {
               fileObj.hasValidChild = true;
             }
-            if (this.opt.onlyShowValid && !child.hasValidChild && !child.isValid) {
+            if(this.opt.onlyShowValid && !child.hasValidChild && !child.isValid) {
               const spliceIndex = fileObj.children.indexOf(child);
               fileObj.children.splice(spliceIndex, 1);
             }
@@ -250,11 +250,11 @@ class FileTreeSelectionPrompt extends Base {
     // Render question
     var message = this.getQuestion();
 
-    if (this.firstRender) {
+    if(this.firstRender) {
       message += chalk.dim('(Use arrow keys, Use space to toggle folder)');
     }
 
-    if (this.status === 'answered') {
+    if(this.status === 'answered') {
       message += chalk.cyan(this.opt.multiple ? this.selectedList.join(', ') : this.active.path)
     }
     else {
@@ -265,7 +265,7 @@ class FileTreeSelectionPrompt extends Base {
 
     let bottomContent;
 
-    if (error) {
+    if(error) {
       bottomContent = '\n' + chalk.red('>> ') + error;
     }
 
@@ -299,17 +299,17 @@ class FileTreeSelectionPrompt extends Base {
 
     this.screen.done();
     cliCursor.show();
-    this.done(this.opt.multiple ? this.selectedList :state.value);
+    this.done(this.opt.multiple ? this.selectedList : state.value);
   }
 
   moveActive(distance = 0) {
     const currentIndex = this.shownList.indexOf(this.active)
     let index = currentIndex + distance
 
-    if (index >= this.shownList.length) {
+    if(index >= this.shownList.length) {
       index = 0
     }
-    else if (index < 0) {
+    else if(index < 0) {
       index = this.shownList.length - 1
     }
 
@@ -330,7 +330,7 @@ class FileTreeSelectionPrompt extends Base {
   }
 
   onLeftKey() {
-    if ((this.active.type === 'file' || !this.active.open) && this.active.parent) {
+    if((this.active.type === 'file' || !this.active.open) && this.active.parent) {
       this.active = this.active.parent;
     }
     this.active.open = false;
@@ -343,12 +343,12 @@ class FileTreeSelectionPrompt extends Base {
   }
 
   onSpaceKey(tirggerByTab = false) {
-    if (!tirggerByTab && this.opt.multiple) {
-      if (this.active.isValid === false) {
+    if(!tirggerByTab && this.opt.multiple) {
+      if(this.active.isValid === false) {
         return
       }
 
-      if (this.selectedList.includes(this.active.path)) {
+      if(this.selectedList.includes(this.active.path)) {
         this.selectedList.splice(this.selectedList.indexOf(this.active.path), 1);
       }
       else {
@@ -359,7 +359,7 @@ class FileTreeSelectionPrompt extends Base {
       return
     }
 
-    if (this.active.children && this.active.children.length === 0) {
+    if(this.active.children && this.active.children.length === 0) {
       return
     }
 
