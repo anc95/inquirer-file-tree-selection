@@ -3,7 +3,6 @@
  * `file-tree-slection` type prompt
  */
 
-const _ = require('lodash');
 const chalk = require('chalk');
 const figures = require('figures');
 const cliCursor = require('cli-cursor');
