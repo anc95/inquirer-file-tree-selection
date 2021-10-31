@@ -33,7 +33,7 @@ class FileTreeSelectionPrompt extends Base {
 
     this.fileTree = {
       children: [rootNode]
-    };    
+    };
 
     this.shownList = []
 
@@ -175,11 +175,11 @@ class FileTreeSelectionPrompt extends Base {
   async prepareChildren(node) {
     const parentPath = node.path;
 
-    if (!fs.lstatSync(parentPath).isDirectory() || node.children || node.open === true) {
-      return;
-    }
-
     try {
+      if (!fs.lstatSync(parentPath).isDirectory() || node.children || node.open === true) {
+        return;
+      }
+
       const children = fs.readdirSync(parentPath, {withFileTypes: true}).map(item => {
         return {
           parent: node,
@@ -188,7 +188,7 @@ class FileTreeSelectionPrompt extends Base {
           path: path.resolve(parentPath, item.name)
         }
       });
-  
+
       node.children = children;
     } catch (e) { 
       // maybe for permission denied, we cant read the dir
