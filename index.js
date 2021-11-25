@@ -51,7 +51,11 @@ class FileTreeSelectionPrompt extends Base {
 
     // Make sure no default is set (so it won't be printed)
     this.opt.default = null;
-    this.selectedList = {};
+    if (this.opt.states) {
+      this.selectedList = {};
+    } else {
+      this.selectedList = [];
+    }
     this.paginator = new Paginator(this.screen);
   }
 
@@ -144,7 +148,7 @@ class FileTreeSelectionPrompt extends Base {
         if (this.opt.states) {
           prefix += itemPath.path in this.selectedList ? this.opt.states.find((state) => state.state == this.selectedList[itemPath.path]).label : figures.radioOff;
         } else {
-          prefix += itemPath.path in this.selectedList ? figures.radioOn : figures.radioOff;
+          prefix += this.selectedList.includes(itemPath.path) ? figures.radioOn : figures.radioOff
         }
         prefix += ' ';
       }
@@ -352,16 +356,24 @@ class FileTreeSelectionPrompt extends Base {
         return
       }
 
-      if (this.active.path in this.selectedList) {
-        let nextStateIndex = 1 + this.opt.states.findIndex((state) => state.state == this.selectedList[this.active.path]);
-        if (nextStateIndex < this.opt.states.length) {
-          this.selectedList[this.active.path] = this.opt.states[nextStateIndex].state;
+      if (this.opt.states) {
+        if (this.active.path in this.selectedList) {
+          let nextStateIndex = 1 + this.opt.states.findIndex((state) => state.state == this.selectedList[this.active.path]);
+          if (nextStateIndex < this.opt.states.length) {
+            this.selectedList[this.active.path] = this.opt.states[nextStateIndex].state;
+          } else {
+            delete this.selectedList[this.active.path];
+          }
         } else {
-          delete this.selectedList[this.active.path];
+          this.selectedList[this.active.path] = this.opt.states[0].state;
         }
-      }
-      else {
-        this.selectedList[this.active.path] = this.opt.states[0].state;
+      } else {
+        if (this.selectedList.includes(this.active.path)) {
+          this.selectedList.splice(this.selectedList.indexOf(this.active.path), 1);
+        }
+        else {
+          this.selectedList.push(this.active.path);
+        }
       }
 
       this.render()
