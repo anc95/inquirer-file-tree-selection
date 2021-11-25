@@ -43,14 +43,15 @@ class FileTreeSelectionPrompt extends Base {
         default: null,
         pageSize: 10,
         onlyShowDir: false,
-        multiple: false
+        multiple: false,
+        states: false
       },
       ...this.opt
     }
 
     // Make sure no default is set (so it won't be printed)
     this.opt.default = null;
-    this.selectedList = [];
+    this.selectedList = {};
     this.paginator = new Paginator(this.screen);
   }
 
@@ -140,7 +141,11 @@ class FileTreeSelectionPrompt extends Base {
 
       // when multiple is true, add radio icon at prefix
       if (this.opt.multiple) {
-        prefix += this.selectedList.includes(itemPath.path) ? figures.radioOn : figures.radioOff;
+        if (this.opt.states) {
+          prefix += itemPath.path in this.selectedList ? this.opt.states.find((state) => state.state == this.selectedList[itemPath.path]).label : figures.radioOff;
+        } else {
+          prefix += itemPath.path in this.selectedList ? figures.radioOn : figures.radioOff;
+        }
         prefix += ' ';
       }
       const safeIndent = (indent - prefix.length + 2) > 0
@@ -189,9 +194,9 @@ class FileTreeSelectionPrompt extends Base {
       });
 
       node.children = children;
-    } catch (e) { 
+    } catch (e) {
       // maybe for permission denied, we cant read the dir
-      // do nothing here  
+      // do nothing here
     }
 
     const validate = this.opt.validate;
@@ -254,7 +259,7 @@ class FileTreeSelectionPrompt extends Base {
     }
 
     if (this.status === 'answered') {
-      message += chalk.cyan(this.opt.multiple ? this.selectedList.join(', ') : this.active.path)
+      message += chalk.cyan(this.opt.multiple ? JSON.stringify(this.selectedList) : this.active.path)
     }
     else {
       this.shownList = []
@@ -347,11 +352,16 @@ class FileTreeSelectionPrompt extends Base {
         return
       }
 
-      if (this.selectedList.includes(this.active.path)) {
-        this.selectedList.splice(this.selectedList.indexOf(this.active.path), 1);
+      if (this.active.path in this.selectedList) {
+        let nextStateIndex = 1 + this.opt.states.findIndex((state) => state.state == this.selectedList[this.active.path]);
+        if (nextStateIndex < this.opt.states.length) {
+          this.selectedList[this.active.path] = this.opt.states[nextStateIndex].state;
+        } else {
+          delete this.selectedList[this.active.path];
+        }
       }
       else {
-        this.selectedList.push(this.active.path);
+        this.selectedList[this.active.path] = this.opt.states[0].state;
       }
 
       this.render()
