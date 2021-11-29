@@ -44,17 +44,22 @@ class FileTreeSelectionPrompt extends Base {
         pageSize: 10,
         onlyShowDir: false,
         multiple: false,
-        states: false
+        states: false,
+        selectedList: false,
       },
       ...this.opt
     }
 
     // Make sure no default is set (so it won't be printed)
     this.opt.default = null;
-    if (this.opt.states) {
-      this.selectedList = {};
+    if (this.opt.selectedList) {
+      this.selectedList = this.opt.selectedList
     } else {
-      this.selectedList = [];
+      if (this.opt.states) {
+        this.selectedList = {};
+      } else {
+        this.selectedList = [];
+      }
     }
     this.paginator = new Paginator(this.screen);
   }
