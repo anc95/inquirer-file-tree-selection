@@ -10,7 +10,7 @@ inquirer
     {
       type: 'file-tree-selection',
       name: 'file',
-      default: '/Users/anchao/code/inquirer-file-tree-selection/example/multiple.js',
+      default: __filename,
       message: 'choose a file',
       transformer: (input) => {
         const name = input.split(path.sep).pop();
@@ -19,7 +19,21 @@ inquirer
         }
         return name;
       }
-    }
+    },
+    {
+        type: 'file-tree-selection',
+        name: 'files',  
+        default: [__dirname],
+        multiple: true,
+        message: 'choose mutiple file',
+        transformer: (input) => {
+          const name = input.split(path.sep).pop();
+          if (name[0] == ".") {
+            return chalk.grey(name);
+          }
+          return name;
+        }
+      }
   ])
   .then(answers => {
     console.log(JSON.stringify(answers))
