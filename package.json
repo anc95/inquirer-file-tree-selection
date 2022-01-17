@@ -19,7 +19,7 @@
   "license": "ISC",
   "dependencies": {
     "chalk": "^5.0.0",
-    "cli-cursor": "^3.1.0",
+    "cli-cursor": "^4.0.0",
     "figures": "^4.0.0",
     "lodash": "^4.17.11",
     "rxjs": "^6.5.2"
