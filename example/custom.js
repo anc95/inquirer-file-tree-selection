@@ -10,6 +10,7 @@ inquirer
     {
       type: 'file-tree-selection',
       name: 'file',
+      default: '/Users/anchao/code/inquirer-file-tree-selection/example/multiple.js',
       message: 'choose a file',
       transformer: (input) => {
         const name = input.split(path.sep).pop();

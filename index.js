@@ -45,15 +45,16 @@ class FileTreeSelectionPrompt extends Base {
         onlyShowDir: false,
         multiple: false,
         states: false,
-        selectedList: false,
       },
-      ...this.opt
+      ...this.opt,
+      selectedList: this.opt.selectedList || this.opt.default,
     }
 
     // Make sure no default is set (so it won't be printed)
-    this.opt.default = null;
-    if (this.opt.selectedList) {
-      this.selectedList = this.opt.selectedList
+    // this.opt.default = null;
+    this.selectedList = this.opt.selectedList;
+    if (this.selectedList) {
+      !Array.isArray(this.selectedList) && (this.selectedList = [this.selectedList])
     } else {
       if (this.opt.states) {
         this.selectedList = {};
@@ -117,11 +118,12 @@ class FileTreeSelectionPrompt extends Base {
       rootNode.open = true;
       if (this.opt.hideRoot) {
         this.fileTree.children = rootNode.children;
-        this.active = this.fileTree.children[0];
+        this.active = this.active || this.fileTree.children[0];
       } else {
-        this.active = rootNode.children[0];
+        this.active = this.active || rootNode.children[0];
       }
       this.render();
+      this.prepareChildren(this.active);
     }
 
     return this;
@@ -251,7 +253,41 @@ class FileTreeSelectionPrompt extends Base {
       await addValidity(node);
     }
 
-    !node._rootNode && this.render();
+    // When it's single selection and has default value, we should expand to the default file.
+    if (this.firstRender && this.opt.default && !this.opt.multiple) {
+      const defaultPath = this.opt.default;
+      const exists = fs.existsSync(defaultPath);
+
+      if (exists) {
+        const founded = node.children.find(item => {
+          if (item.path === defaultPath) {
+            return true;
+          }
+
+          if (defaultPath.includes(`${item.path}${path.sep}`)) {
+            return true;
+          }
+        });
+
+        if (founded) {
+          if (founded.path === defaultPath) {
+            this.active = founded;
+
+            let parent = founded.parent;
+
+            while (parent && !parent._rootNode) {
+              parent.open = true;
+              parent = parent.parent;
+            }
+          }
+          else {
+            return await this.prepareChildren(founded);
+          }
+        }
+      }
+    }
+
+    !this.firstRender && this.render();
   }
 
   /**
