@@ -26,6 +26,6 @@
   },
   "devDependencies": {
     "auto-changelog": "^2.2.1",
-    "inquirer": "^6.4.0"
+    "inquirer": "^8.2.0"
   }
 }
