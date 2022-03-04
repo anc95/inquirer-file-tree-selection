@@ -40,6 +40,10 @@ When `multiple` is enabled, `default` should be `string[]` type, otherwise it's 
 
 2. Ensure you have registered with `file-tree-selection`
 
+```js
+inquirer.registerPrompt('file-tree-selection', inquirerFileTreeSelection)
+```
+
 3. And you will get type support when you code in IDE
 
 ![ts](./example/ts.jpeg)
