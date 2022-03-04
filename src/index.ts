@@ -14,6 +14,46 @@ const Base = require('inquirer/lib/prompts/base');
 const observe = require('inquirer/lib/utils/events');
 const Paginator = require('inquirer/lib/utils/paginator');
 
+import { Question, Transformer } from 'inquirer'
+
+type FileTreeSelectionPromptOptions<T> = Pick<Question<T>, 'type' | 'name' | 'message' | 'filter' | 'validate' | 'default'> & {
+  transformer?: Transformer<T>
+  /**
+   * count of items show in terminal. default: 10
+   */
+  pageSize?: number
+  /**
+   * if true, will only show directory. Default: false
+   */
+  onlyShowDir?: boolean
+  /**
+   * if true, will only show valid files (if validate is provided). Default: false.
+   */
+  onlyShowValid?: boolean
+  /**
+   * if true, will hide children of valid directories (if validate is provided). Default: false.
+   */
+  hideChildrenOfValid?: boolean
+  /**
+   * if true, will enable to select multiple files. Default: false.
+   */
+  multiple?: boolean,
+  /**
+   * Default to be current process.cwd()
+   */
+  root?: string
+  /**
+   * Hide root, Default: false
+   */
+  hideRoot?: boolean
+}
+
+declare module 'inquirer' {
+  interface QuestionMap<T> {
+    fileTreeSelection: Omit<FileTreeSelectionPromptOptions<T>, 'type'> & { type: 'file-tree-selection' }
+  }
+}
+
 /**
  * type: string
  * onlyShowDir: boolean (default: false)
@@ -295,7 +335,7 @@ class FileTreeSelectionPrompt extends Base {
    * @return {FileTreeSelectionPrompt} self
    */
 
-  render(error) {
+  render(error?) {
     // Render question
     var message = this.getQuestion();
 
@@ -431,3 +471,5 @@ class FileTreeSelectionPrompt extends Base {
 }
 
 module.exports = FileTreeSelectionPrompt;
+
+export default FileTreeSelectionPrompt

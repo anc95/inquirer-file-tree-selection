@@ -6,12 +6,12 @@
 ![QuickDemo](./example/screenshot.gif)
 
 ### Install
-```
+```sh
 npm install inquirer-file-tree-selection-prompt
 ```
 
 ### Usage
-```
+```js
 inquirer.registerPrompt('file-tree-selection', inquirerFileTreeSelection)
 
 inquirer.prompt({
@@ -32,9 +32,20 @@ The extra options that this plugin provides are:
 - `multiple`: (Boolean) if true, will enable to select multiple files. Default: false.
 
 When `multiple` is enabled, `default` should be `string[]` type, otherwise it's `string` type.
+### Typescript Support
+
+> version >= 1.0.15
+
+1. Install `@types/inquirer`
+
+2. Ensure you have registered with `file-tree-selection`
+
+3. And you will get type support when you code in IDE
+
+![ts](./example/ts.jpeg)
 
 ### Example
-```
+```js
 const inquirer = require('inquirer')
 const inquirerFileTreeSelection = require('inquirer-file-tree-selection-prompt')
 

@@ -3,10 +3,12 @@
   "version": "1.0.15",
   "repository": "https://github.com/anc95/inquirer-file-tree-selection",
   "description": "inquerer file tree selection prompt",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "changelog": "auto-changelog",
-    "postpublish": "npm run changelog && git push origin --all; git push origin --tags"
+    "postpublish": "npm run changelog && git push origin --all; git push origin --tags",
+    "prepublish": "tsc"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
@@ -25,6 +27,8 @@
     "rxjs": "^7.5.2"
   },
   "devDependencies": {
+    "@types/node": "^17.0.21",
+    "@types/inquirer": "^8.2.0",
     "auto-changelog": "^2.2.1",
     "inquirer": "^8.2.0"
   }
