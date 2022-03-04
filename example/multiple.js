@@ -1,5 +1,5 @@
 const inquirer = require('inquirer')
-const inquirerFileTreeSelection = require('../index')
+const inquirerFileTreeSelection = require('../dist/index')
 const path = require('path');
 const chalk = require('chalk');
 

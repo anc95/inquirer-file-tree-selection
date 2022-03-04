@@ -1,5 +1,5 @@
 const inquirer = require('inquirer')
-const inquirerFileTreeSelection = require('../index')
+const inquirerFileTreeSelection = require('../dist/index')
 const path = require('path');
 
 inquirer.registerPrompt('file-tree-selection', inquirerFileTreeSelection)
@@ -18,7 +18,6 @@ inquirer
         }
         return true;
       },
-      // onlyShowValid: true,
     }
   ])
   .then(answers => {
