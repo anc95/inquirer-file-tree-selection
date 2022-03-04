@@ -34,7 +34,7 @@ The extra options that this plugin provides are:
 When `multiple` is enabled, `default` should be `string[]` type, otherwise it's `string` type.
 ### Typescript Support
 
-> version >= 1.0.15
+> version >= 1.0.16
 
 1. Install `@types/inquirer`
 
