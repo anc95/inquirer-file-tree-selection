@@ -10,13 +10,13 @@ const path = require('path');
 const fs = require('fs');
 const { fromEvent } = require('rxjs');
 const { filter, share, map, takeUntil } = require('rxjs/operators');
-const Base = require('inquirer/lib/prompts/base');
 const observe = require('inquirer/lib/utils/events');
-const Paginator = require('inquirer/lib/utils/paginator');
 
+import Base from 'inquirer/lib/prompts/base';
 import { Question, Transformer } from 'inquirer'
+import Paginator from 'inquirer/lib/utils/paginator';
 
-type FileTreeSelectionPromptOptions<T> = Pick<Question<T>, 'type' | 'name' | 'message' | 'filter' | 'validate' | 'default'> & {
+type FileTreeSelectionPromptOptions<T = any> = Pick<Question<T>, 'type' | 'name' | 'message' | 'filter' | 'validate' | 'default'> & {
   transformer?: Transformer<T>
   /**
    * count of items show in terminal. default: 10
@@ -46,6 +46,7 @@ type FileTreeSelectionPromptOptions<T> = Pick<Question<T>, 'type' | 'name' | 'me
    * Hide root, Default: false
    */
   hideRoot?: boolean
+  selectedList?: string[]
 }
 
 declare module 'inquirer' {
@@ -58,7 +59,16 @@ declare module 'inquirer' {
  * type: string
  * onlyShowDir: boolean (default: false)
  */
-class FileTreeSelectionPrompt extends Base {
+class FileTreeSelectionPrompt extends Base<FileTreeSelectionPromptOptions & {states: any}> {
+  fileTree: any
+  firstRender: boolean
+  shownList: string[] | Record<string, any>
+  selectedList: string[] | Record<string, any>
+  paginator: Paginator
+  done: (...args: any[]) => void
+  active: Record<string, any>
+
+
   constructor(questions, rl, answers) {
     super(questions, rl, answers);
 
@@ -145,7 +155,7 @@ class FileTreeSelectionPrompt extends Base {
     function normalizeKeypressEvents(value, key) {
       return { value: value, key: key || {} };
     }
-    fromEvent(this.rl.input, 'keypress', normalizeKeypressEvents)
+    fromEvent((this.rl as any).input, 'keypress', normalizeKeypressEvents)
       .pipe(filter(({ key }) => key && key.name === 'tab'), share())
       .pipe(takeUntil(validation.success))
       .forEach(this.onSpaceKey.bind(this, true));
@@ -256,7 +266,7 @@ class FileTreeSelectionPrompt extends Base {
         return val;
       }
 
-      return await this.opt.filter(val);
+      return await this.opt.filter(val, this.answers);
     };
 
     if (validate) {
@@ -364,7 +374,7 @@ class FileTreeSelectionPrompt extends Base {
 
   onEnd(state) {
     this.status = 'answered';
-    this.answer = state.value;
+    // this.answer = state.value;
 
     // Re-render prompt
     this.render();
