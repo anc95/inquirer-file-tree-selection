@@ -20,9 +20,9 @@
   "author": "anc95",
   "license": "ISC",
   "dependencies": {
-    "chalk": "^5.0.0",
-    "cli-cursor": "^4.0.0",
-    "figures": "^4.0.0",
+    "chalk": "^4.0.0",
+    "cli-cursor": "^3",
+    "figures": "^3",
     "lodash": "^4.17.11",
     "rxjs": "^7.5.2"
   },
