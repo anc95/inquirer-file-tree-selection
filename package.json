@@ -22,7 +22,7 @@
   "license": "ISC",
   "dependencies": {
     "chalk": "^4.0.0",
-    "cli-cursor": "^3",
+    "cli-cursor": "^4",
     "figures": "^3",
     "lodash": "^4.17.11",
     "rxjs": "^7.5.2"
