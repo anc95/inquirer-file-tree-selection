@@ -21,7 +21,7 @@ inquirer.prompt({
 ```
 
 ### Options
-Takes `type`, `name`, `message`, [`filter`, `validate`, `transformer`, `default`, `pageSize`, `onlyShowDir`, `onlyShowValid`, `hideChildrenOfValid`, `root`, `hideRoot`, `multiple`] properties.
+Takes `type`, `name`, `message`, [`filter`, `validate`, `transformer`, `default`, `pageSize`, `onlyShowDir`, `onlyShowValid`, `hideChildrenOfValid`, `root`, `hideRoot`, `multiple`, `enableGoUpperDirector`] properties.
 
 The extra options that this plugin provides are:
 - `onlyShowDir`:  (Boolean) if true, will only show directory. Default: false.
@@ -30,6 +30,7 @@ The extra options that this plugin provides are:
 - `hideChildrenOfValid`: (Boolean) if true, will hide children of valid directories (if `validate` is provided). Default: false.
 - `transformer`: (Function) a hook function to transform the display of directory or file name.
 - `multiple`: (Boolean) if true, will enable to select multiple files. Default: false.
+- `enableGoUpperDirector`: (Boolean) Show `..` in inside root dir, and the user can press **space** on it to go upper directory. Default: false.
 
 When `multiple` is enabled, `default` should be `string[]` type, otherwise it's `string` type.
 ### Typescript Support
