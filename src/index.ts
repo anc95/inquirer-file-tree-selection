@@ -15,6 +15,9 @@ const observe = require('inquirer/lib/utils/events');
 import Base from 'inquirer/lib/prompts/base';
 import { Question, Transformer } from 'inquirer'
 import Paginator from 'inquirer/lib/utils/paginator';
+import { Node } from './types';
+import { isSubPath } from './utils';
+import { getUpperDirNode } from './upperDir';
 
 type FileTreeSelectionPromptOptions<T = any> = Pick<Question<T>, 'type' | 'name' | 'message' | 'filter' | 'validate' | 'default'> & {
   transformer?: Transformer<T>
@@ -47,6 +50,10 @@ type FileTreeSelectionPromptOptions<T = any> = Pick<Question<T>, 'type' | 'name'
    */
   hideRoot?: boolean
   selectedList?: string[]
+  /**
+   * show `..` in inside root dir, and you the user can press space on it to go upper directory. Default: false
+   */
+  enableGoUpperDirectory?: boolean
 }
 
 declare module 'inquirer' {
@@ -60,29 +67,36 @@ declare module 'inquirer' {
  * onlyShowDir: boolean (default: false)
  */
 class FileTreeSelectionPrompt extends Base<FileTreeSelectionPromptOptions & {states: any}> {
-  fileTree: any
+  rootNode: Node
   firstRender: boolean
   shownList: string[] | Record<string, any>
   selectedList: string[] | Record<string, any>
   paginator: Paginator
   done: (...args: any[]) => void
-  active: Record<string, any>
+  active: Node
 
+  get fileTree() {
+    if (this.opt.hideRoot) {
+      return this.rootNode
+    }
+
+    return {
+      children: [this.rootNode]
+    } 
+  }
 
   constructor(questions, rl, answers) {
     super(questions, rl, answers);
 
     const root = path.resolve(process.cwd(), this.opt.root || '.');
-    const rootNode = {
+    const rootNode: Node = {
       path: root,
       type: 'directory',
       name: '.(root directory)',
       _rootNode: true
     }
 
-    this.fileTree = {
-      children: [rootNode]
-    };
+    this.rootNode = rootNode
 
     this.shownList = []
 
@@ -162,18 +176,13 @@ class FileTreeSelectionPrompt extends Base<FileTreeSelectionPromptOptions & {sta
 
     cliCursor.hide();
     if (this.firstRender) {
-      const rootNode = this.fileTree.children[0];
+      const rootNode = this.rootNode;
 
       await this.prepareChildren(rootNode);
       rootNode.open = true;
-      if (this.opt.hideRoot) {
-        this.fileTree.children = rootNode.children;
-        this.active = this.active || this.fileTree.children[0];
-      } else {
-        this.active = this.active || rootNode.children[0];
-      }
-      this.render();
+      this.active = this.active || rootNode.children[0];
       this.prepareChildren(this.active);
+      this.render()
     }
 
     return this;
@@ -181,6 +190,7 @@ class FileTreeSelectionPrompt extends Base<FileTreeSelectionPromptOptions & {sta
 
   renderFileTree(root = this.fileTree, indent = 2) {
     const children = root.children || []
+
     let output = ''
     const transformer = this.opt.transformer;
     const isFinal = this.status === 'answered';
@@ -212,7 +222,10 @@ class FileTreeSelectionPrompt extends Base<FileTreeSelectionPromptOptions & {sta
       const safeIndent = (indent - prefix.length + 2) > 0
         ? indent - prefix.length + 2
         : 0 ;
-      if (transformer) {
+
+      if (itemPath.name == '..') {
+        showValue = `${' '.repeat(safeIndent)}${prefix}..(Press \`Space\` to go parent directory)\n`
+      } else if (transformer) {
         const transformedValue = transformer(itemPath.path, this.answers, { isFinal });
         showValue = ' '.repeat(safeIndent) + prefix + transformedValue + '\n';
       } else {
@@ -237,11 +250,11 @@ class FileTreeSelectionPrompt extends Base<FileTreeSelectionPromptOptions & {sta
     return output
   }
 
-  async prepareChildren(node) {
+  async prepareChildren(node: Node) {
     const parentPath = node.path;
 
     try {
-      if (!fs.lstatSync(parentPath).isDirectory() || node.children || node.open === true) {
+      if (node.name == '..' || !fs.lstatSync(parentPath).isDirectory() || node.children || node.open === true) {
         return;
       }
 
@@ -303,36 +316,40 @@ class FileTreeSelectionPrompt extends Base<FileTreeSelectionPromptOptions & {sta
       await addValidity(node);
     }
 
+    if (this.opt.enableGoUpperDirectory && node === this.rootNode) {
+      this.rootNode.children.unshift(getUpperDirNode(this.rootNode.path))
+    }
+
     // When it's single selection and has default value, we should expand to the default file.
     if (this.firstRender && this.opt.default && !this.opt.multiple) {
       const defaultPath = this.opt.default;
-      const exists = fs.existsSync(defaultPath);
+      const founded = node.children.find(item => {
+        if (item.name === '..') {
+          return false
+        }
 
-      if (exists) {
-        const founded = node.children.find(item => {
-          if (item.path === defaultPath) {
-            return true;
+        if (item.path === defaultPath) {
+          return true;
+        }
+
+        if (defaultPath.includes(`${item.path}${path.sep}`)) {
+          return true;
+        }
+      });
+
+      if (founded) {
+        if (founded.path === defaultPath) {
+          this.active = founded;
+
+          let parent = founded.parent;
+
+          while (parent && !parent._rootNode) {
+            parent.open = true;
+            parent = parent.parent;
           }
-
-          if (defaultPath.includes(`${item.path}${path.sep}`)) {
-            return true;
-          }
-        });
-
-        if (founded) {
-          if (founded.path === defaultPath) {
-            this.active = founded;
-
-            let parent = founded.parent;
-
-            while (parent && !parent._rootNode) {
-              parent.open = true;
-              parent = parent.parent;
-            }
-          }
-          else {
-            return await this.prepareChildren(founded);
-          }
+        }
+        else {
+          return await this.prepareChildren(founded);
         }
       }
     }
@@ -413,7 +430,11 @@ class FileTreeSelectionPrompt extends Base<FileTreeSelectionPromptOptions & {sta
     }
 
     this.active = this.shownList[index]
-    this.prepareChildren(this.active);
+    
+    if (this.active.name !== '..') {
+      this.prepareChildren(this.active);
+    }
+
     this.render()
   }
 
@@ -441,8 +462,22 @@ class FileTreeSelectionPrompt extends Base<FileTreeSelectionPromptOptions & {sta
     this.render()
   }
 
-  onSpaceKey(tirggerByTab = false) {
-    if (!tirggerByTab && this.opt.multiple) {
+  async onSpaceKey(triggerByTab = false) {
+    if (!triggerByTab && this.active.name == '..' && isSubPath(this.active.path, this.rootNode.path)) {
+      this.rootNode = {
+        ...this.active,
+        name: path.basename(this.active.path),
+      }
+      await this.prepareChildren(this.rootNode);
+      this.active = this.rootNode.children?.[0]
+      this.firstRender = true
+      this.rootNode.open = true
+      this.render()
+      this.firstRender = false
+      return
+    }
+
+    if (!triggerByTab && this.opt.multiple) {
       if (this.active.isValid === false) {
         return
       }
