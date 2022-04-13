@@ -10,15 +10,8 @@ inquirer
     {
       type: 'file-tree-selection',
       name: 'file',
-      default: path.join(__dirname, './multiple.js'),
       message: 'choose a file',
-      transformer: (input) => {
-        const name = input.split(path.sep).pop();
-        if (name[0] == ".") {
-          return chalk.grey(name);
-        }
-        return name;
-      },
+      enableGoUpperDirectory: true
     },
   ])
   .then(answers => {

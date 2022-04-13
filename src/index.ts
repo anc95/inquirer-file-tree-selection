@@ -254,7 +254,7 @@ class FileTreeSelectionPrompt extends Base<FileTreeSelectionPromptOptions & {sta
     const parentPath = node.path;
 
     try {
-      if (!fs.lstatSync(parentPath).isDirectory() || node.children || node.open === true) {
+      if (node.name == '..' || !fs.lstatSync(parentPath).isDirectory() || node.children || node.open === true) {
         return;
       }
 
