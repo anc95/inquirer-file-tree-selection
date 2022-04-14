@@ -21,7 +21,7 @@
   "author": "anc95",
   "license": "ISC",
   "dependencies": {
-    "chalk": "^4.0.0",
+    "chalk": "^5.0.1",
     "cli-cursor": "^3",
     "figures": "^3",
     "lodash": "^4.17.11",
