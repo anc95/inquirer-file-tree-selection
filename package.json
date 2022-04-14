@@ -23,7 +23,7 @@
   "dependencies": {
     "chalk": "^4.0.0",
     "cli-cursor": "^3",
-    "figures": "^3",
+    "figures": "^4",
     "lodash": "^4.17.11",
     "rxjs": "^7.5.2"
   },
