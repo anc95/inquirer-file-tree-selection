@@ -1,5 +1,5 @@
 import path from 'path'
-import { Node } from './types'
+import { Node } from './types.js'
 
 const getParentDir = (dir: string) => {
   return path.dirname(dir)
