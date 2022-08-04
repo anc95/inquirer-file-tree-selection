@@ -1,7 +1,5 @@
-const inquirer = require('inquirer')
-const inquirerFileTreeSelection = require('../dist/index')
-const path = require('path');
-const chalk = require('chalk');
+import inquirer from 'inquirer'
+import inquirerFileTreeSelection from 'inquirer-file-tree-selection-prompt'
 
 inquirer.registerPrompt('file-tree-selection', inquirerFileTreeSelection)
 

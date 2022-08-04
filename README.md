@@ -10,6 +10,8 @@
 npm install inquirer-file-tree-selection-prompt
 ```
 
+> If you are still using CJS, please install `inquirer-file-tree-selection-prompt@^1`
+
 ### Usage
 ```js
 inquirer.registerPrompt('file-tree-selection', inquirerFileTreeSelection)
@@ -50,6 +52,29 @@ inquirer.registerPrompt('file-tree-selection', inquirerFileTreeSelection)
 ![ts](./example/ts.jpeg)
 
 ### Example
+
+ESM (version ^2)
+
+```js
+import inquirer from 'inquirer'
+import inquirerFileTreeSelection from 'inquirer-file-tree-selection-prompt'
+
+inquirer.registerPrompt('file-tree-selection', inquirerFileTreeSelection)
+
+inquirer
+  .prompt([
+    {
+      type: 'file-tree-selection',
+      name: 'file'
+    }
+  ])
+  .then(answers => {
+    console.log(JSON.stringify(answers))
+  });
+```
+
+CJS (version ^1 and <2)
+
 ```js
 const inquirer = require('inquirer')
 const inquirerFileTreeSelection = require('inquirer-file-tree-selection-prompt')
@@ -67,3 +92,5 @@ inquirer
     console.log(JSON.stringify(answers))
   });
 ```
+
+[More examples](./example/)

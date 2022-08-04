@@ -1,6 +1,6 @@
-const inquirer = require('inquirer')
-const inquirerFileTreeSelection = require('../dist/index')
-const path = require('path');
+import inquirer from 'inquirer'
+import inquirerFileTreeSelection from 'inquirer-file-tree-selection-prompt'
+import path from 'path';
 
 inquirer.registerPrompt('file-tree-selection', inquirerFileTreeSelection)
 
