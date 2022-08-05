@@ -15,6 +15,9 @@
     "prepublishOnly": "tsc",
     "build": "tsc"
   },
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
