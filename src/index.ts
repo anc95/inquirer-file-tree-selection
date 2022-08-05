@@ -3,21 +3,20 @@
  * `file-tree-slection` type prompt
  */
 
-const chalk = require('chalk');
-const figures = require('figures');
-const cliCursor = require('cli-cursor');
-const path = require('path');
-const fs = require('fs');
-const { fromEvent } = require('rxjs');
-const { filter, share, map, takeUntil } = require('rxjs/operators');
-const observe = require('inquirer/lib/utils/events');
-
-import Base from 'inquirer/lib/prompts/base';
+import chalk from 'chalk';
+import figures from 'figures';
+import cliCursor from 'cli-cursor';
+import path from 'node:path';
+import fs from 'node:fs'
+import { fromEvent } from 'rxjs';
+import { filter, share, map, takeUntil } from 'rxjs/operators';
+import observe from 'inquirer/lib/utils/events.js';
+import Base from 'inquirer/lib/prompts/base.js';
 import { Question, Transformer } from 'inquirer'
-import Paginator from 'inquirer/lib/utils/paginator';
-import { Node } from './types';
-import { isSubPath } from './utils';
-import { getUpperDirNode } from './upperDir';
+import Paginator from 'inquirer/lib/utils/paginator.js';
+import { Node } from './types.js';
+import { isSubPath } from './utils.js';
+import { getUpperDirNode } from './upperDir.js';
 
 type FileTreeSelectionPromptOptions<T = any> = Pick<Question<T>, 'type' | 'name' | 'message' | 'filter' | 'validate' | 'default'> & {
   transformer?: Transformer<T>
@@ -261,7 +260,7 @@ class FileTreeSelectionPrompt extends Base<FileTreeSelectionPromptOptions & {sta
       const children = fs.readdirSync(parentPath, {withFileTypes: true}).map(item => {
         return {
           parent: node,
-          type: item.isDirectory() ? 'directory' : 'file',
+          type: item.isDirectory() ? 'directory' : 'file' as ('directory' | 'file'),
           name: item.name,
           path: path.resolve(parentPath, item.name)
         }
