@@ -514,6 +514,4 @@ class FileTreeSelectionPrompt extends Base<FileTreeSelectionPromptOptions & {sta
   }
 }
 
-module.exports = FileTreeSelectionPrompt;
-
 export default FileTreeSelectionPrompt
