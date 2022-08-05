@@ -12,7 +12,7 @@
   "scripts": {
     "changelog": "auto-changelog",
     "postpublish": "npm run changelog && git push origin --all; git push origin --tags",
-    "prepublish": "tsc",
+    "prepublishOnly": "tsc",
     "build": "tsc"
   },
   "publishConfig": {
