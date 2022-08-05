@@ -1,6 +1,6 @@
 {
   "name": "inquirer-file-tree-selection-prompt",
-  "version": "1.0.19",
+  "version": "2.0.2",
   "repository": "https://github.com/anc95/inquirer-file-tree-selection",
   "description": "inquerer file tree selection prompt",
   "main": "dist/index.js",
@@ -8,9 +8,12 @@
   "scripts": {
     "changelog": "auto-changelog",
     "postpublish": "npm run changelog && git push origin --all; git push origin --tags",
-    "prepublish": "tsc",
+    "prepublishOnly": "tsc",
     "build": "tsc"
   },
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
