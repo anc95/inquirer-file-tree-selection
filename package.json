@@ -31,7 +31,6 @@
     "chalk": "^5.0.1",
     "cli-cursor": "^4.0.0",
     "figures": "^4.0.1",
-    "lodash": "^4.17.21",
     "rxjs": "^7.5.6"
   },
   "devDependencies": {
