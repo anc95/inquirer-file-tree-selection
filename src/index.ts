@@ -253,14 +253,14 @@ class FileTreeSelectionPrompt extends Base<FileTreeSelectionPromptOptions & {sta
     const parentPath = node.path;
 
     try {
-      if (node.name == '..' || !fs.lstatSync(parentPath).isDirectory() || node.children || node.open === true) {
+      if (node.name == '..' || fs.lstatSync(parentPath).isFile() || node.children || node.open === true) {
         return;
       }
 
       const children = fs.readdirSync(parentPath, {withFileTypes: true}).map(item => {
         return {
           parent: node,
-          type: item.isDirectory() ? 'directory' : 'file' as ('directory' | 'file'),
+          type: item.isFile() ? 'file' : 'directory' as ('directory' | 'file'),
           name: item.name,
           path: path.resolve(parentPath, item.name)
         }
